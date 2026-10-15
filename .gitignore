@@ -1,1 +1,3 @@
--e "build/\ndist/\nnbproject/private/" 
+build/
+dist/
+nbproject/private/
