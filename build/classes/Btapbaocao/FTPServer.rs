@@ -1,2 +1,0 @@
-Btapbaocao.ClientHandler
-Btapbaocao.FTPServer

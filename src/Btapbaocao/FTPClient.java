@@ -101,6 +101,10 @@ public class FTPClient {
                     case "put":
                         doPut(arg);
                         break;
+                    case "del":
+                    case "delete":
+                        send("DELE " + arg);
+                        break;
                     case "quit":
                         send("QUIT");
                         ctrl.close();
@@ -115,7 +119,7 @@ public class FTPClient {
     }
 
     private void printHelp() {
-        System.out.println("Lenh: user <ten> | pass <mk> | mode active|passive | ls | get <file> | put <duong_dan_file> | quit");
+        System.out.println("Lenh: user <ten> | pass <mk> | mode active|passive | ls | get <file> | put <duong_dan_file> | del <ten_file> | quit");
         System.out.println("Tai khoan mau: admin/123456 hoac user/user");
     }
 

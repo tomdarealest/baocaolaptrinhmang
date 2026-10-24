@@ -16,24 +16,92 @@ public class FTPServer {
     // Dai cong cho kenh du lieu Passive (mo san trong Firewall)
     public static final int PASV_MIN = 50000;
     public static final int PASV_MAX = 50100;
-    public static final File ROOT = new File("ftp_root");   // thu muc chia se
+    public static File ROOT = new File("ftp_root");   // thu muc chia se
     public static final Map<String, String> USERS = new HashMap<>();
 
-    public static void main(String[] args) throws IOException {
+    public static volatile boolean running = false;
+    public static ServerSocket currentServer = null;
+    public static java.util.function.Consumer<String> logger = null;
+    public static Runnable clientListener = null;
+    public static final java.util.List<ClientHandler> activeClients = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    static {
         USERS.put("admin", "123456");
         USERS.put("user", "user");
+    }
+
+    public static void log(String msg) {
+        System.out.println(msg);
+        if (logger != null) {
+            try {
+                logger.accept(msg);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    public static void startServer(int port, File rootFolder) throws IOException {
+        if (running) {
+            return;
+        }
+        ROOT = rootFolder != null ? rootFolder : new File("ftp_root");
         if (!ROOT.exists()) {
             ROOT.mkdirs();
         }
+        currentServer = new ServerSocket(port);
+        running = true;
+        log("FTP Server dang chay tai cong " + port);
+        log("Thu muc chia se: " + ROOT.getAbsolutePath());
 
-        try (ServerSocket server = new ServerSocket(CONTROL_PORT)) {
-            System.out.println("FTP Server dang chay tai cong " + CONTROL_PORT);
-            System.out.println("Thu muc chia se: " + ROOT.getAbsolutePath());
-            printIPs();
-            while (true) {
-                Socket client = server.accept();
-                System.out.println("Client ket noi: " + client.getRemoteSocketAddress());
-                new Thread(new ClientHandler(client)).start();
+        new Thread(() -> {
+            try {
+                while (running && currentServer != null && !currentServer.isClosed()) {
+                    Socket client = currentServer.accept();
+                    ClientHandler handler = new ClientHandler(client);
+                    activeClients.add(handler);
+                    if (clientListener != null) {
+                        clientListener.run();
+                    }
+                    log("Client ket noi: " + client.getRemoteSocketAddress());
+                    new Thread(handler).start();
+                }
+            } catch (IOException e) {
+                if (running) {
+                    log("Loi Server: " + e.getMessage());
+                }
+            } finally {
+                stopServer();
+            }
+        }, "FTPServer-Acceptor").start();
+    }
+
+    public static void stopServer() {
+        running = false;
+        if (currentServer != null && !currentServer.isClosed()) {
+            try {
+                currentServer.close();
+            } catch (IOException ignored) {
+            }
+        }
+        currentServer = null;
+        for (ClientHandler ch : activeClients) {
+            ch.disconnect();
+        }
+        activeClients.clear();
+        if (clientListener != null) {
+            clientListener.run();
+        }
+        log("FTP Server da dung.");
+    }
+
+    public static void main(String[] args) throws IOException {
+        startServer(CONTROL_PORT, ROOT);
+        printIPs();
+        while (running) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
             }
         }
     }
@@ -74,6 +142,7 @@ public class FTPServer {
 class ClientHandler implements Runnable {
 
     private final Socket ctrl;
+    private final java.util.Date connectedTime = new java.util.Date();
     private BufferedReader in;
     private PrintWriter out;
 
@@ -90,9 +159,31 @@ class ClientHandler implements Runnable {
         this.ctrl = ctrl;
     }
 
+    public String getUsername() {
+        return loggedIn ? pendingUser : "(Chưa đăng nhập)";
+    }
+
+    public Socket getSocket() {
+        return ctrl;
+    }
+
+    public java.util.Date getConnectedTime() {
+        return connectedTime;
+    }
+
+    public void disconnect() {
+        closePasv();
+        try {
+            if (ctrl != null && !ctrl.isClosed()) {
+                ctrl.close();
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
     private void reply(String msg) {
         out.println(msg);
-        System.out.println("  -> " + msg);
+        FTPServer.log("  -> " + msg);
     }
 
     @Override
@@ -104,7 +195,7 @@ class ClientHandler implements Runnable {
 
             String line;
             while ((line = in.readLine()) != null) {
-                System.out.println("<- " + line);
+                FTPServer.log("<- " + line);
                 String[] p = line.trim().split("\\s+", 2);
                 String cmd = p[0].toUpperCase();
                 String arg = p.length > 1 ? p[1] : "";
@@ -116,14 +207,15 @@ class ClientHandler implements Runnable {
                 handle(cmd, arg);
             }
         } catch (IOException e) {
-            System.out.println("Loi client: " + e.getMessage());
+            FTPServer.log("Loi client: " + e.getMessage());
         } finally {
             closePasv();
-            try {
-                ctrl.close();
-            } catch (IOException ignored) {
+            disconnect();
+            FTPServer.activeClients.remove(this);
+            if (FTPServer.clientListener != null) {
+                FTPServer.clientListener.run();
             }
-            System.out.println("Client ngat ket noi");
+            FTPServer.log("Client ngat ket noi: " + ctrl.getRemoteSocketAddress());
         }
     }
 
@@ -137,6 +229,9 @@ class ClientHandler implements Runnable {
             case "PASS":
                 if (pendingUser != null && arg.equals(FTPServer.USERS.get(pendingUser))) {
                     loggedIn = true;
+                    if (FTPServer.clientListener != null) {
+                        FTPServer.clientListener.run();
+                    }
                     reply("230 Login successful");
                 } else {
                     reply("530 Login incorrect");
@@ -183,9 +278,48 @@ class ClientHandler implements Runnable {
             case "STOR":
                 doStor(arg);
                 break;
+            case "DELE":
+                doDele(arg);
+                break;
+            case "SIZE":
+                doSize(arg);
+                break;
+            case "NOOP":
+                reply("200 NOOP ok");
+                break;
             default:
                 reply("502 Command not implemented");
         }
+    }
+
+    private void doDele(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            reply("501 Missing filename");
+            return;
+        }
+        File f = new File(FTPServer.ROOT, new File(name).getName());
+        if (!f.exists() || !f.isFile()) {
+            reply("550 File not found");
+            return;
+        }
+        if (f.delete()) {
+            reply("250 File deleted successfully");
+        } else {
+            reply("450 Cannot delete file");
+        }
+    }
+
+    private void doSize(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            reply("501 Missing filename");
+            return;
+        }
+        File f = new File(FTPServer.ROOT, new File(name).getName());
+        if (!f.exists() || !f.isFile()) {
+            reply("550 File not found");
+            return;
+        }
+        reply("213 " + f.length());
     }
 
     /** Mo kenh du lieu theo che do Passive hoac Active. */
