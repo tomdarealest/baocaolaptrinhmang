@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kho tệp · Kiên, Huy & Quốc</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">KHO TỆP<span>Đồ án lập trình mạng</span></a><span class="team">Kiên / Huy / Quốc</span></header>
+  <main>
+    <section class="intro"><p class="eyebrow">CHIA SẺ TỆP TRỰC TUYẾN</p><h1>Tệp của nhóm.<br>Luôn trong tầm tay.</h1><p>Đăng nhập để xem, tải lên và tải xuống tài liệu của nhóm.</p></section>
+    <section id="loginPanel" class="card login"><div><span class="badge">01 / KẾT NỐI</span><h2>Chào bạn trở lại</h2><p>Sử dụng tài khoản được cung cấp bởi người chạy máy chủ.</p></div>
+      <form id="loginForm"><label for="username">Tài khoản</label><input id="username" autocomplete="username" value="admin" required maxlength="100"><label for="password">Mật khẩu</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Đăng nhập <span aria-hidden="true">→</span></button></form>
+    </section>
+    <section id="workspace" hidden>
+      <div class="toolbar"><div><span class="badge">KHÔNG GIAN CHUNG</span><h2>Thư viện tệp</h2></div><button id="logout" class="secondary">Đăng xuất</button></div>
+      <div class="workspace-grid">
+        <section class="card upload"><span class="badge">TẢI LÊN</span><h3>Thêm một tệp mới</h3><p>Tối đa 20 MiB mỗi tệp. Tệp trùng tên sẽ không bị ghi đè.</p><form id="uploadForm"><label class="file-picker" for="file">Chọn tệp từ thiết bị<input id="file" type="file" required></label><button type="submit">Tải lên máy chủ ↑</button></form><progress id="progress" value="0" max="100" hidden aria-label="Tiến độ tải lên"></progress><p id="transferStatus" aria-live="polite"></p></section>
+        <section class="card library"><div class="list-heading"><h3 id="fileCount">Danh sách tệp</h3><button id="refresh" class="secondary">Làm mới ↻</button></div><ul id="files" class="files"></ul><p id="empty" hidden>Chưa có tệp nào. Hãy tải lên tệp đầu tiên của nhóm.</p></section>
+      </div>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <footer><span>KIÊN · HUY · QUỐC</span><span>Kết nối để chia sẻ.</span></footer>
+</body>
+</html>

@@ -44,3 +44,7 @@ Dự án xây dựng hệ thống **FTP Server** và **FTP Client** đa luồng 
 ### Tài khoản mặc định:
 - `admin` / `123456`
 - `user` / `user`
+
+## Web File Server (Java HTTP, port 8080)
+
+The project also includes a small Java HTTP file server with an HTML/CSS/JavaScript interface. Run `run_web_server.bat`, then open `http://127.0.0.1:8080`. It shares files from `ftp_root`; its generated admin password is printed in the server console. To publish it through Cloudflare Tunnel, route the hostname to `http://127.0.0.1:8080`.
