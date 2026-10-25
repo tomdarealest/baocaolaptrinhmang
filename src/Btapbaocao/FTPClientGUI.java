@@ -132,7 +132,7 @@ public class FTPClientGUI extends JFrame {
         panel.setBorder(BorderFactory.createTitledBorder("Thông Tin Kết Nối FTP Server"));
 
         panel.add(new JLabel("IP Server:"));
-        txtHost = new JTextField("127.0.0.1", 10);
+        txtHost = new JTextField("26.69.89.236", 10);
         panel.add(txtHost);
 
         panel.add(new JLabel("Port:"));
