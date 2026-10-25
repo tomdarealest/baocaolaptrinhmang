@@ -39,7 +39,13 @@ Dự án xây dựng hệ thống **FTP Server** và **FTP Client** đa luồng 
 
 ### Khởi động nhanh bằng file `.bat` (Windows):
 1. **Khởi động Server:** Chạy file `Chay_Server_GUI.bat` -> Bấm nút **▶ Khởi Động Server**.
-2. **Khởi động Client:** Chạy file `Chay_Client_GUI.bat` -> Bấm **Kết Nối** (Mặc định `127.0.0.1:2121`, `admin` / `123456`).
+2. **Khởi động Client:** Chạy file `Chay_Client_GUI.bat` -> Bấm **Kết Nối** (mặc định IP Radmin `26.69.89.236:2121`, `admin` / `123456`). Nếu chạy cả Server và Client trên máy này, đổi IP thành `127.0.0.1`; IP Radmin của máy hiện tại là `26.54.197.44`.
+
+### Kết nối qua Radmin VPN
+- Cài và kết nối Radmin VPN trên cả máy chạy Server và máy chạy Client.
+- IP Radmin của máy chạy Server phải là `26.69.89.236`; mở Server tại cổng `2121`.
+- Trên Client, nhập `26.69.89.236` và cổng `2121`. Passive mode dùng thêm dải cổng dữ liệu `50000–50100` của Server; Active mode cần kết nối ngược tới dải `50200–50300` của Client.
+- Nếu `26.69.89.236` không phải IP của máy Server, hãy dùng IP Radmin hiển thị trên máy Server. Máy này hiện có IP Radmin `26.54.197.44`.
 
 ### Tài khoản mặc định:
 - `admin` / `123456`

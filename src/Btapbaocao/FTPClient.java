@@ -51,10 +51,10 @@ public class FTPClient {
 
     private void run() throws IOException {
         Scanner sc = new Scanner(System.in);
-        System.out.print("IP Server (IP Radmin, vd 26.x.x.x) [127.0.0.1]: ");
+        System.out.print("IP Server (Radmin VPN) [26.69.89.236]: ");
         String host = sc.nextLine().trim();
         if (host.isEmpty()) {
-            host = "127.0.0.1";
+            host = "26.69.89.236";
         }
         System.out.print("Cong dieu khien [" + DEFAULT_CONTROL_PORT + "]: ");
         String ps = sc.nextLine().trim();
