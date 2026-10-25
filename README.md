@@ -2,14 +2,7 @@
 
 Dự án xây dựng hệ thống **FTP Server** và **FTP Client** đa luồng (Multi-threaded), hỗ trợ cả giao diện đồ họa **GUI Swing** và **Console CLI**, tuân thủ mô hình 2 kênh điều khiển và truyền dữ liệu theo chuẩn RFC 959 (hỗ trợ Active Mode và Passive Mode).
 
----
 
-## 👥 Thông Tin Sinh Viên
-* **Tài khoản GitHub:** [HoyMe1011](https://github.com/HoyMe1011)
-* **Email:** huy10200511@gmail.com
-* **Repository:** [baocaolaptrinhmang](https://github.com/tomdarealest/baocaolaptrinhmang)
-
----
 
 ## 🚀 Tính Năng Chính
 
